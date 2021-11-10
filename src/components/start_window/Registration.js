@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 import {Box, Button, Paper, TextField, Typography} from "@mui/material";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import {useNavigate} from "react-router-dom";
@@ -6,6 +6,8 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
 import useStyles from "./styles";
+import getFirebase from "../../firebase";
+import {currentUserContext} from "../../App";
 
 
 const schema = yup.object({
@@ -48,7 +50,10 @@ export default function Registration () {
         email: "",
         password: "",
         confPassword: "",
-    })
+    });
+    const [notSentError, setNotSentError] = useState(false);
+    const firebase = getFirebase();
+    const {setCurrentUser} = useContext(currentUserContext);
     const { register, control, handleSubmit, formState:{ errors } } = useForm({
         resolver: yupResolver(schema)
     });
@@ -58,13 +63,55 @@ export default function Registration () {
         setRegData(prevState => ({...prevState, [name]: value}))
     }
 
-    const onSubmit = () => {
-        console.log("ok");
+    const onSubmit = async () => {
+        // const date = new Date();
+        // const dateToSend = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+        // const minutes = () => {
+        //     if (date.getMinutes() < 10) {
+        //         return "0" + date.getMinutes();
+        //     } else {
+        //         return date.getMinutes();
+        //     }
+        // };
+        // const timeToSend = `${date.getHours()}:${minutes()}`;
+
+        try {
+            if (firebase) {
+                const user = await firebase
+                    .auth()
+                    .createUserWithEmailAndPassword(regData.email, regData.password);
+                console.log("user", user);
+                setCurrentUser(regData.email);
+                navigate("/app");
+                setNotSentError(false);
+
+                const db = firebase.firestore();
+                const userData = db.collection("users");
+
+                userData.doc(`${regData.email}`).set({
+                    name: regData.name,
+                    surname: regData.surname,
+                    position:regData.position,
+                    email: regData.email,
+                })
+                    .then(() => {
+                        console.log('Document Added');
+
+                    })
+                    .catch(function (error) {
+                        console.error('Error adding document: ', error);
+
+                    });
+            }
+        } catch (error) {
+            console.log("error", error);
+            setNotSentError(true);
+        }
     };
 
     return (
         <Box className={classes.mainContainer}>
-            <Paper className={classes.regLogWindow} elevation={20}>
+            <Paper className={classes.regLogWindow} elevation={20} style={{maxHeight: 642}}>
                 <ArrowBackIosIcon
                     color="secondary"
                     style={{cursor: "pointer"}}
@@ -149,7 +196,7 @@ export default function Registration () {
                                 size="small"
                                 margin="normal"
                                 label="Hasło"
-                                type="passwor"
+                                type="password"
                                 helperText={errors?.password?.message}
                                 className={classes.input}
                                 value={regData.password}
@@ -176,10 +223,21 @@ export default function Registration () {
                             />
                         )}
                     />
+                    <Box className={classes.errorBox}>
+                        {notSentError ? (
+                            <Typography
+                                variant="caption"
+                                color="error"
+                            >
+                                Email jest zajęty
+                            </Typography>
+                        ) : null
+                        }
+                    </Box>
                     <Button
                         variant="contained"
                         color="secondary"
-                        style={{marginTop: 8}}
+
                         type="submit"
                     >
                         Załóż konto

@@ -6,6 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
 import useStyles from "./styles";
+import getFirebase from "../../firebase";
 
 
 const schema = yup.object({
@@ -26,18 +27,32 @@ export default function Login () {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [notSentErr, setNotSentErr] = useState(false);
+    const firebase = getFirebase();
     const { register, control, handleSubmit, formState:{ errors } } = useForm({
         resolver: yupResolver(schema)
     });
 
-    const onSubmit = () => {
-
-        console.log("ok");
+    const onSubmit = async () => {
+        try {
+            if (firebase) {
+                const user = await firebase
+                    .auth()
+                    .signInWithEmailAndPassword(email, password);
+                console.log("user", user);
+                setNotSentErr(false);
+                navigate("/app");
+            }
+        }catch (error) {
+            console.log("error", error);
+            setNotSentErr(true);
+            console.log(notSentErr)
+        }
     };
 
     return (
         <Box className={classes.mainContainer}>
-            <Paper className={classes.regLogWindow} elevation={20}>
+            <Paper className={classes.regLogWindow} elevation={20} style={{maxHeight: 305}}>
                 <ArrowBackIosIcon
                     color="secondary"
                     style={{cursor: "pointer", alignSelf: "flex-end"}}
@@ -71,6 +86,7 @@ export default function Login () {
                                 margin="normal"
                                 size="small"
                                 label="Hasło"
+                                type="password"
                                 className={classes.input}
                                 helperText={errors?.password?.message}
                                 value={password}
@@ -79,14 +95,24 @@ export default function Login () {
                             />
                         )}
                     />
+                    <Box className={classes.errorBox}>
+                        {notSentErr ? (
+                            <Typography
+                                variant="caption"
+                                color="error"
+                            >
+                                Nie poprawny email lub hasło</Typography>
+                        ) : null
+                        }
+                    </Box>
                     <Button
                         variant="contained"
                         color="secondary"
-                        style={{marginTop: 8}}
                         type="submit"
                     >
                         Zaloguj się
                     </Button>
+
                 </form>
             </Paper>
         </Box>

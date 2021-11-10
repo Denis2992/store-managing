@@ -5,6 +5,7 @@ const useStyles = makeStyles((theme) => ({
     mainContainer: {
         display: "flex",
         justifyContent: "center",
+
     },
     welcomeWindow: {
         transform: "translate(0, 200px)",
@@ -31,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
         padding: theme.spacing(2),
         border: `2px solid ${theme.palette.primary.main}`,
         width: 300,
+        height: "auto",
         [theme.breakpoints.down(450)]: {
             transform: "translate(0, 100px)",
         }
@@ -44,7 +46,13 @@ const useStyles = makeStyles((theme) => ({
     input: {
         width: 250,
         height: 60
-    }
+    },
+    errorBox: {
+        height: 30,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+    },
 }));
 
 export default useStyles;
