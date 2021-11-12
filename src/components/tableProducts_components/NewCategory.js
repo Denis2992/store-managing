@@ -8,7 +8,7 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
 import getFirebase from "../../firebase";
-import {dataTableContext} from "./DataTable";
+import {dataContext} from "../../App";
 
 
 export const newCategoryStyles = makeStyles((theme) => ({
@@ -52,7 +52,7 @@ export default function NewCategory () {
     const classes = newCategoryStyles();
     const navigate = useNavigate();
     const [category, setCategory] = useState("");
-    const {categories, setCategories} = useContext(dataTableContext);
+    const {categories, setCategories} = useContext(dataContext);
     const { register, control, handleSubmit, formState:{ errors } } = useForm({
         resolver: yupResolver(schema)
     });

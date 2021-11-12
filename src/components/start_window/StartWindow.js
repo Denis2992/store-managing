@@ -2,14 +2,14 @@ import React, {useContext} from "react";
 import {Box, Button, Paper, Typography} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import useStyles from "./styles";
-import {currentUserContext} from "../../App";
+import {dataContext} from "../../App";
 import TableProducts from "../TableProducts";
 
 
 export default function StartWindow () {
     const classes = useStyles();
     const navigate = useNavigate();
-    const {currentUser} = useContext(currentUserContext);
+    const {currentUser} = useContext(dataContext);
 
 
         if (!currentUser) {

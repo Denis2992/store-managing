@@ -14,7 +14,7 @@ import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {dataTableContext} from "../DataTable";
+import {dataContext} from "../../../App";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import {useNavigate} from "react-router-dom";
 import getFirebase from "../../../firebase";
@@ -109,7 +109,7 @@ EnhancedTableToolbar.propTypes = {
 
 export default function EnhancedTable() {
     const [selected, setSelected] = React.useState([]);
-    const {categories, setCategories} = useContext(dataTableContext);
+    const {categories, setCategories} = useContext(dataContext);
     const page = 0;
     const rowsPerPage = 100;
     const firebase = getFirebase();

@@ -1,20 +1,19 @@
 import React, {createContext, useContext, useEffect, useState} from "react";
 import {makeStyles} from "@mui/styles";
-import PropTypes from 'prop-types';
 import SwipeableViews from 'react-swipeable-views';
 import { useTheme } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
-
 import Box from '@mui/material/Box';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import {IconButton, Paper, Tooltip} from "@mui/material";
+import PropTypes from 'prop-types';
 import {useNavigate} from "react-router-dom";
-import {dataTableContext} from "./DataTable";
 import CategoriesTable from "./tableSettings_components/CategoriesTable";
 import UnitsTable from "./tableSettings_components/UnitsTable";
+import {dataContext} from "../../App";
 
 
 function TabPanel(props) {
@@ -47,11 +46,6 @@ function a11yProps(index) {
     };
 }
 
-const fabStyle = {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-};
 
 
 const useStyles = makeStyles((theme) => ({
@@ -95,15 +89,11 @@ const useStyles = makeStyles((theme) => ({
 
 }));
 
-export const settingsContext = createContext("");
-
 export default function TableSettings () {
     const classes = useStyles();
     const theme = useTheme();
-    const {categories,  units, tableSettingsCard, setTableSettingsCard} = useContext(dataTableContext);
+    const {tableSettingsCard, setTableSettingsCard} = useContext(dataContext);
     const navigate = useNavigate();
-
-
 
     const handleChange = (event, newValue) => {
         setTableSettingsCard(newValue);
@@ -111,11 +101,6 @@ export default function TableSettings () {
 
     const handleChangeIndex = (index) => {
         setTableSettingsCard(index);
-    };
-
-    const transitionDuration = {
-        enter: theme.transitions.duration.enteringScreen,
-        exit: theme.transitions.duration.leavingScreen,
     };
 
     return (

@@ -16,10 +16,8 @@ import {useNavigate} from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
-import {dataTableContext} from "./DataTable";
-import {currentUserContext} from "../../App";
+import {dataContext} from "../../App";
 import getFirebase from "../../firebase";
-
 
 const useStyles = makeStyles((theme) => ({
     box: {
@@ -73,10 +71,10 @@ export default function NewEntry () {
         singleData, setSingleData,
         categories, units,
         dataTable, setDataTable,
-        editMode, setEditMode,
-        setSelected, selected
-    } = useContext(dataTableContext);
-    const {userData} = useContext(currentUserContext);
+        userData,editMode, setEditMode,
+        setSelected
+    } = useContext(dataContext);
+
     const firebase = getFirebase();
     const { register, control, handleSubmit, formState:{ errors } } = useForm({
         resolver: yupResolver(schema)
@@ -131,10 +129,10 @@ export default function NewEntry () {
         }
     };
 
-    const handleSaveEditItem = () => {
+    const handleSaveEditData = async () => {
 
         const dataToSend = {
-            id: setSingleData.id,
+            id: singleData.id,
             product: singleData.product,
             category: singleData.category,
             quantity: singleData.quantity,
@@ -152,9 +150,7 @@ export default function NewEntry () {
                 querySnapShot.forEach(doc => {
                     doc.ref.update(dataToSend).then(() => {
                         console.log("Document successfully edited!");
-                        setDataTable([...dataTable?.filter(item => item.id !== singleData.id), dataToSend]);
-                        setEditMode(false);
-                        setSelected([]);
+                        setDataTable([...dataTable?.filter(item => item.id !== dataToSend.id), dataToSend]);
                         setSingleData({
                             id: "",
                             product: "",
@@ -165,6 +161,8 @@ export default function NewEntry () {
                             employee: ""
                         })
                         navigate("/app");
+                        setSelected([]);
+                        setEditMode(false);
                     }).catch(error => {
                         console.log("Error removing document: ", error);
                     });
@@ -173,11 +171,12 @@ export default function NewEntry () {
             .catch(error => {
                 console.log("Error getting documents: ", error);
             })
+
     };
 
     const handleSendForm = () => {
         if (editMode) {
-            return handleSaveEditItem();
+            return handleSaveEditData();
         } else {
             return handleAddNewData();
         }
@@ -189,7 +188,7 @@ export default function NewEntry () {
                 <IconButton onClick={() => navigate("/app")} style={{transform: "translate(270px, -10px)"}}>
                     <CloseIcon color="error" />
                 </IconButton>
-                {editMode ? (
+                {!editMode ? (
                     <Typography variant="h5" align={"center"}>Nowy wpis</Typography>
                 ) : (
                     <Typography variant="h5" align={"center"}>Edytuj</Typography>

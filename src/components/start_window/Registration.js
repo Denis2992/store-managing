@@ -7,7 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
 import useStyles from "./styles";
 import getFirebase from "../../firebase";
-import {currentUserContext} from "../../App";
+import { dataContext } from "../../App";
 
 
 const schema = yup.object({
@@ -53,7 +53,7 @@ export default function Registration () {
     });
     const [notSentError, setNotSentError] = useState(false);
     const firebase = getFirebase();
-    const {setCurrentUser} = useContext(currentUserContext);
+    const {setCurrentUser} = useContext(dataContext);
     const { register, control, handleSubmit, formState:{ errors } } = useForm({
         resolver: yupResolver(schema)
     });

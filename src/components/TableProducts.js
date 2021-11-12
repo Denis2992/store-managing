@@ -1,11 +1,16 @@
-import React, {useContext} from "react";
+import React, {createContext, useContext, useEffect, useState} from "react";
 import {Box, CircularProgress, Typography} from "@mui/material";
 import {makeStyles} from "@mui/styles";
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import getFirebase from "../firebase";
-import {currentUserContext} from "../App";
-import {useNavigate} from "react-router-dom";
+import {currentUserContext, dataContext} from "../App";
+import {Route, Routes, useNavigate} from "react-router-dom";
 import DataTable from "./tableProducts_components/DataTable";
+import NewEntry from "./tableProducts_components/NewEntry";
+import TableSettings from "./tableProducts_components/TableSettings";
+import NewCategory from "./tableProducts_components/NewCategory";
+import NewUnit from "./tableProducts_components/NewUnit";
+import {fetchData} from "./tableProducts_components/fetchData/fetch";
 
 const useStyles = makeStyles((theme) => ({
     mainBox: {
@@ -25,10 +30,11 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
+
 export default function TableProducts () {
     const classes = useStyles();
     const firebase = getFirebase();
-    const {setCurrentUser, userData} = useContext(currentUserContext);
+    const {setCurrentUser, userData, setDataTable} = useContext(dataContext);
     const navigate = useNavigate();
 
 
@@ -38,6 +44,7 @@ export default function TableProducts () {
             if (firebase) {
                 await firebase.auth().signOut();
                 setCurrentUser(null);
+                setDataTable([])
                 navigate("/start");
             }
         } catch (error) {
@@ -57,8 +64,15 @@ export default function TableProducts () {
                     </Box>
                 </Box>
                 <DataTable />
+                <Routes>
+                    <Route path="/app/newEntry" element={<NewEntry />}/>
+                    <Route path="/app/edit" element={<NewEntry />}/>
+                    <Route path="/app/settings" element={<TableSettings />}/>
+                    <Route path="/app/settings/newCategory" element={<NewCategory />}/>
+                    <Route path="/app/settings/newUnit" element={<NewUnit />}/>
+                </Routes>
             </Box>
-        );
+        )
     } else {
         return (
             <CircularProgress color="secondary"/>

@@ -7,7 +7,7 @@ import {Box, Button, IconButton, TextField, Tooltip, Typography} from "@mui/mate
 import Paper from "@mui/material/Paper";
 import {ArrowBackIosNewOutlined} from "@mui/icons-material";
 import * as yup from "yup";
-import {dataTableContext} from "./DataTable";
+import {dataContext} from "../../App";
 import getFirebase from "../../firebase";
 
 
@@ -19,7 +19,7 @@ export default function NewUnit () {
     const classes = newCategoryStyles();
     const navigate = useNavigate();
     const [unit, setUnit] = useState("");
-    const {units, setUnits, setTableSettingsCard} = useContext(dataTableContext);
+    const {units, setUnits, setTableSettingsCard} = useContext(dataContext);
     const [sameUnitErr, setSameUnitErr] = useState(false);
     const { register, control, handleSubmit, formState:{ errors } } = useForm({
         resolver: yupResolver(schema)

@@ -8,6 +8,7 @@ import Login from "./components/start_window/Login";
 import Registration from "./components/start_window/Registration";
 import Background from "./assets/store-background.jpg";
 import getFirebase from "./firebase";
+import {fetchData} from "./components/tableProducts_components/fetchData/fetch";
 
 const useStyles = makeStyles((theme) => ({
   mainContainer: {
@@ -20,16 +21,30 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export const currentUserContext = createContext("");
+export const dataContext = createContext("");
 
 function App() {
     const [currentUser, setCurrentUser] = useState(null);
     const [userData, setUserData] = useState("");
     const classes = useStyles();
+    const [categories, setCategories] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [dataTable, setDataTable] = useState([]);
+    const [singleData, setSingleData] = useState({
+        id: "",
+        product: "",
+        category: "",
+        quantity: "",
+        units: "",
+        date: "",
+        employee: ""
+    });
+    const [tableSettingsCard, setTableSettingsCard] = useState(0);
+    const [editMode, setEditMode] = useState(false);
+    const [selected, setSelected] = useState([]);
+    const firebase = getFirebase();
 
     useEffect(() => {
-        const firebase = getFirebase();
-
         if (firebase) {
             firebase.auth().onAuthStateChanged((authUser) => {
                 if (authUser) {
@@ -51,11 +66,27 @@ function App() {
             };
 
             fetch();
+            fetchData("categories", setCategories);
+            fetchData("units", setUnits);
+            fetchData("data", setDataTable);
         }
-    }, [currentUser]);
+        }, [currentUser]);
+
+
+
 
   return (
-      <currentUserContext.Provider value={{currentUser, setCurrentUser, userData, setUserData}}>
+      <dataContext.Provider value={{
+          categories, setCategories,
+          units, setUnits,
+          dataTable, setDataTable,
+          singleData, setSingleData,
+          tableSettingsCard, setTableSettingsCard,
+          currentUser, setCurrentUser, userData, setUserData,
+          editMode, setEditMode,
+          selected, setSelected
+      }}
+      >
           <Box className={classes.mainContainer}>
               <HashRouter>
                   <Routes>
@@ -66,7 +97,7 @@ function App() {
                   </Routes>
               </HashRouter>
           </Box>
-      </currentUserContext.Provider>
+      </dataContext.Provider>
   );
 }
 

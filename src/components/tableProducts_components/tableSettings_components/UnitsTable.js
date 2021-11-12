@@ -1,7 +1,7 @@
 import React, {useContext, useState} from "react";
 import {EnhancedTableToolbar} from "./CategoriesTable";
 import {EnhancedTableHead} from "./CategoriesTable";
-import {dataTableContext} from "../DataTable";
+import {dataContext} from "../../../App";
 import getFirebase from "../../../firebase";
 import Box from "@mui/material/Box";
 import TableContainer from "@mui/material/TableContainer";
@@ -13,7 +13,7 @@ import Checkbox from "@mui/material/Checkbox";
 
 export default function UnitsTable () {
     const [selected, setSelected] = useState([]);
-    const {units, setUnits} = useContext(dataTableContext);
+    const {units, setUnits} = useContext(dataContext);
     const page = 0;
     const rowsPerPage = 100;
     const firebase = getFirebase();
