@@ -19,10 +19,21 @@ import Tooltip from '@mui/material/Tooltip';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import {makeStyles} from "@mui/styles";
-import {useState} from "react";
+import {createContext, useEffect, useState} from "react";
+import {Route, Routes, useNavigate} from "react-router-dom";
+import NewEntry from "./NewEntry";
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import SettingsIcon from '@mui/icons-material/Settings';
+import TableSettings from "./TableSettings";
+import NewCategory from "./NewCategory";
+import NewUnit from "./NewUnit";
+import {fetchData} from "./fetchData/fetch";
+import EditIcon from '@mui/icons-material/Edit';
+import getFirebase from "../../firebase";
+
+export const dataTableContext = createContext("");
 
 function createData(name, calories, fat, carbs, protein) {
     return {
@@ -80,15 +91,7 @@ function stableSort(array, comparator) {
     return stabilizedThis.map((el) => el[0]);
 }
 
-const headCells = [
-    {id: 'id', label: 'ID', disablePadding: true},
-    {id: 'product', label: 'Nazwa produktu', disablePadding: true},
-    {id: 'category', label: 'Kategoria', disablePadding: true},
-    {id: 'quantity', label: 'Ilość', disablePadding: true},
-    {id: 'units', label: 'Jednostki', disablePadding: true},
-    {id: 'date', label: 'Data', disablePadding: true},
-    {id: 'employee', label: 'Pracownik', disablePadding: true}
-];
+
 
 function EnhancedTableHead(props) {
     const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
@@ -111,27 +114,6 @@ function EnhancedTableHead(props) {
                         }}
                     />
                 </TableCell>
-                {headCells.map((headCell) => (
-                    <TableCell
-                        key={headCell.id}
-                        align={headCell.numeric ? 'right' : 'left'}
-                        padding={headCell.disablePadding ? 'none' : 'normal'}
-                        sortDirection={orderBy === headCell.id ? order : false}
-                    >
-                        <TableSortLabel
-                            active={orderBy === headCell.id}
-                            direction={orderBy === headCell.id ? order : 'asc'}
-                            onClick={createSortHandler(headCell.id)}
-                        >
-                            {headCell.label}
-                            {orderBy === headCell.id ? (
-                                <Box component="span" sx={visuallyHidden}>
-                                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                                </Box>
-                            ) : null}
-                        </TableSortLabel>
-                    </TableCell>
-                ))}
             </TableRow>
         </TableHead>
     );
@@ -147,7 +129,8 @@ EnhancedTableHead.propTypes = {
 };
 
 const EnhancedTableToolbar = (props) => {
-    const { numSelected } = props;
+    const { numSelected, onDeleteItem, onEditItem } = props;
+    const navigate = useNavigate();
 
     return (
         <Toolbar
@@ -181,17 +164,39 @@ const EnhancedTableToolbar = (props) => {
             )}
 
             {numSelected > 0 ? (
-                <Tooltip title="Delete">
-                    <IconButton>
-                        <DeleteIcon />
-                    </IconButton>
-                </Tooltip>
+                <>
+                    {numSelected > 1 ? (
+                        <IconButton disabled>
+                            <EditIcon />
+                        </IconButton>
+                    ) : (
+                        <Tooltip title="Edytuj">
+                            <IconButton aria-label="edit" onClick={onEditItem}>
+                                <EditIcon color="warning"/>
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                    <Tooltip title="Usuń">
+                        <IconButton onClick={onDeleteItem}>
+                            <DeleteIcon color="error"/>
+                        </IconButton>
+                    </Tooltip>
+                </>
+
             ) : (
-                <Tooltip title="Filter list">
-                    <IconButton>
-                        <FilterListIcon />
-                    </IconButton>
-                </Tooltip>
+                <>
+                    <Tooltip title="Nowy wpis">
+                        <IconButton onClick={() => navigate("/app/newEntry")}>
+                            <AddCircleOutlineIcon color="success"/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Ustawienia">
+                        <IconButton onClick={() => navigate("/app/settings")}>
+                            <SettingsIcon color="primary"/>
+                        </IconButton>
+                    </Tooltip>
+                </>
+
             )}
         </Toolbar>
     );
@@ -203,13 +208,22 @@ EnhancedTableToolbar.propTypes = {
 
 const useStyles = makeStyles((theme) => ({
     mainBox: {
-        margin: "32px auto",
+        margin: "0 auto",
+        position: "relative",
+
     },
     paper: {
-        border: `2px solid ${theme.palette.primary.main}`
+        border: `2px solid ${theme.palette.secondary.light}`,
+        margin: "32px auto",
     }
 }));
 
+
+function NavigationIcon() {
+    return null;
+}
+
+NavigationIcon.propTypes = {sx: PropTypes.shape({mr: PropTypes.number})};
 export default function DataTable() {
     const classes = useStyles();
     const [order, setOrder] = useState('asc');
@@ -217,7 +231,10 @@ export default function DataTable() {
     const [selected, setSelected] = useState([]);
     const [page, setPage] = useState(0);
     const [dense, setDense] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [units, setUnits] = useState([]);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [tableSettingsCard, setTableSettingsCard] = useState(0);
     const [dataTable, setDataTable] = useState([]);
     const [singleData, setSingleData] = useState({
         id: "",
@@ -227,7 +244,17 @@ export default function DataTable() {
         units: "",
         date: "",
         employee: ""
-    })
+    });
+    const [editMode, setEditMode] = useState(false);
+    const firebase = getFirebase();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchData("data", setDataTable);
+        fetchData("categories", setCategories);
+        fetchData("units", setUnits);
+
+    }, [])
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -237,7 +264,7 @@ export default function DataTable() {
 
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
-            const newSelecteds = rows.map((n) => n.name);
+            const newSelecteds = dataTable.map((n) => n.id);
             setSelected(newSelecteds);
             return;
         }
@@ -262,6 +289,7 @@ export default function DataTable() {
         }
 
         setSelected(newSelected);
+
     };
 
     const handleChangePage = (event, newPage) => {
@@ -283,98 +311,164 @@ export default function DataTable() {
     const emptyRows =
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-    return (
-        <Box sx={{ width: '90%' }} className={classes.mainBox}>
-            <FormControlLabel
-                control={<Switch checked={dense} onChange={handleChangeDense} />}
-                label="Dense padding"
-            />
-            <Paper sx={{ width: '100%', mb: 2 }} className={classes.paper}>
-                <EnhancedTableToolbar numSelected={selected.length} />
-                <TableContainer>
-                    <Table
-                        sx={{ minWidth: 750 }}
-                        aria-labelledby="tableTitle"
-                        size={dense ? 'small' : 'medium'}
-                        stickyHeader
-                    >
-                        <EnhancedTableHead
-                            numSelected={selected.length}
-                            order={order}
-                            orderBy={orderBy}
-                            onSelectAllClick={handleSelectAllClick}
-                            onRequestSort={handleRequestSort}
-                            rowCount={rows.length}
-                        />
-                        <TableBody>
-                            {/* if you don't need to support IE11, you can replace the `stableSort` call with:
-                 rows.slice().sort(getComparator(order, orderBy)) */}
-                            {stableSort(rows, getComparator(order, orderBy))
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row, index) => {
-                                    const isItemSelected = isSelected(row.name);
-                                    const labelId = `enhanced-table-checkbox-${index}`;
+    const handleDeleteItem = () => {
+        const selectedObject = dataTable?.filter(item => selected.includes(item.id));
+        const ids = selectedObject.map(item => item.id);
 
-                                    return (
-                                        <TableRow
-                                            hover
-                                            onClick={(event) => handleClick(event, row.name)}
-                                            role="checkbox"
-                                            aria-checked={isItemSelected}
-                                            tabIndex={-1}
-                                            key={row.name}
-                                            selected={isItemSelected}
-                                        >
-                                            <TableCell padding="checkbox">
-                                                <Checkbox
-                                                    color="primary"
-                                                    checked={isItemSelected}
-                                                    inputProps={{
-                                                        'aria-labelledby': labelId,
-                                                    }}
-                                                />
-                                            </TableCell>
-                                            <TableCell
-                                                component="th"
-                                                id={labelId}
-                                                scope="row"
-                                                padding="none"
-                                            >
-                                                {row.name}
-                                            </TableCell>
-                                            <TableCell align="right">{row.calories}</TableCell>
-                                            <TableCell align="right">{row.fat}</TableCell>
-                                            <TableCell align="right">{row.carbs}</TableCell>
-                                            <TableCell align="right">{row.protein}</TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            {emptyRows > 0 && (
-                                <TableRow
-                                    style={{
-                                        height: (dense ? 33 : 53) * emptyRows,
-                                    }}
-                                >
-                                    <TableCell colSpan={6} />
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    component="div"
-                    count={rows.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
+        let db = firebase.firestore();
+        let budgetRef = db.collection("data");
+
+        ids.forEach(el => {
+            budgetRef.where("id", "==", el)
+                .get()
+                .then(querySnapshot => {
+                    querySnapshot.forEach(doc => {
+                        doc.ref.delete().then(() => {
+                            console.log("Document successfully deleted!");
+                            setDataTable(dataTable.filter(item => !selected.includes(item.id)));
+                        }).catch(error => {
+                            console.log("Error removing document: ", error);
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.log("Error getting documents: ", error);
+                });
+        });
+        setSelected([]);
+    };
+
+    const handleEditItem =  () => {
+
+        const data = dataTable?.filter(item => item.id === selected[0]);
+
+        setSingleData({
+            id: data[0].id,
+            product: data[0].product,
+            category: data[0].category,
+            quantity: data[0].quantity,
+            units: data[0].units,
+            date: data[0].date,
+            employee: data[0].employee
+        });
+        setEditMode(true);
+        navigate(`/app/edit`);
+
+    };
+
+    return (
+        <dataTableContext.Provider value={{
+            dataTable, setDataTable,
+            singleData, setSingleData,
+            categories, setCategories,
+            units, setUnits,
+            tableSettingsCard, setTableSettingsCard,
+            editMode, setEditMode,
+            setSelected, selected
+        }}
+        >
+            <Box sx={{ width: '100%' }} className={classes.mainBox}>
+                <FormControlLabel
+                    control={<Switch checked={dense} onChange={handleChangeDense} />}
+                    label="Małe komórki"
                 />
-            </Paper>
-            <FormControlLabel
-                control={<Switch checked={dense} onChange={handleChangeDense} />}
-                label="Dense padding"
-            />
-        </Box>
+                <Paper sx={{ width: '90%', mb: 2 }} className={classes.paper}>
+                    <EnhancedTableToolbar
+                        numSelected={selected.length}
+                        onDeleteItem={handleDeleteItem}
+                        onEditItem={handleEditItem}
+                    />
+                    <TableContainer>
+                        <Table
+                            sx={{ minWidth: 750 }}
+                            aria-labelledby="tableTitle"
+                            size={dense ? 'small' : 'medium'}
+                            stickyHeader
+                        >
+                            <EnhancedTableHead
+                                numSelected={selected.length}
+                                order={order}
+                                orderBy={orderBy}
+                                onSelectAllClick={handleSelectAllClick}
+                                onRequestSort={handleRequestSort}
+                                rowCount={dataTable.length}
+                            />
+                            <TableBody>
+                                {/* if you don't need to support IE11, you can replace the `stableSort` call with:
+                 rows.slice().sort(getComparator(order, orderBy)) */}
+                                {stableSort(dataTable, getComparator(order, orderBy))
+                                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                    .map((row, index) => {
+                                        const isItemSelected = isSelected(row.id);
+                                        const labelId = `enhanced-table-checkbox-${index}`;
+
+                                        return (
+                                            <TableRow
+                                                hover
+                                                onClick={(event) => handleClick(event, row.id)}
+                                                role="checkbox"
+                                                aria-checked={isItemSelected}
+                                                tabIndex={-1}
+                                                key={row.id}
+                                                selected={isItemSelected}
+                                            >
+                                                <TableCell padding="checkbox">
+                                                    <Checkbox
+                                                        color="primary"
+                                                        checked={isItemSelected}
+                                                        inputProps={{
+                                                            'aria-labelledby': labelId,
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell
+                                                    component="th"
+                                                    id={labelId}
+                                                    scope="row"
+                                                    padding="none"
+                                                >
+                                                    {row.id}
+                                                </TableCell>
+                                                <TableCell align="left" padding="none">{row.product}</TableCell>
+                                                <TableCell align="left" padding="none">{row.category}</TableCell>
+                                                <TableCell align="left" padding="none">{row.quantity}</TableCell>
+                                                <TableCell align="left" padding="none">{row.units}</TableCell>
+                                                <TableCell align="left" padding="none">{row.date}</TableCell>
+                                                <TableCell align="left" padding="none">{row.employee}</TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                {emptyRows > 0 && (
+                                    <TableRow
+                                        style={{
+                                            height: (dense ? 33 : 53) * emptyRows,
+                                        }}
+                                    >
+                                        <TableCell colSpan={6} />
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <TablePagination
+                        rowsPerPageOptions={[5, 10, 25]}
+                        component="div"
+                        count={dataTable.length}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                    />
+                </Paper>
+                <Routes>
+                    <Route path="/app/newEntry" element={<NewEntry />}/>
+                    <Route path="/app/edit" element={<NewEntry />}/>
+                    <Route path="/app/settings" element={<TableSettings />}/>
+                    <Route path="/app/settings/newCategory" element={<NewCategory />}/>
+                    <Route path="/app/settings/newUnit" element={<NewUnit />}/>
+
+                </Routes>
+            </Box>
+        </dataTableContext.Provider>
     );
 }

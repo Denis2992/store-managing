@@ -17,14 +17,14 @@ const useStyles = makeStyles((theme) => ({
       height: "100vh",
       backgroundRepeat: "no-repeat",
       backgroundPositionX: "center",
-  }
+  },
 }));
 
 export const currentUserContext = createContext("");
 
 function App() {
     const [currentUser, setCurrentUser] = useState(null);
-    const [userData, setUserData] = useState("")
+    const [userData, setUserData] = useState("");
     const classes = useStyles();
 
     useEffect(() => {
@@ -40,16 +40,18 @@ function App() {
             });
         }
 
-        const fetch = async () => {
-            await firebase
-                .firestore()
-                .collection("users")
-                .doc(`${currentUser}`)
-                .get()
-                .then(snapshot => setUserData(snapshot.data()))
-        };
+        if (currentUser) {
+            const fetch = async () => {
+                await firebase
+                    .firestore()
+                    .collection("users")
+                    .doc(`${currentUser}`)
+                    .get()
+                    .then(snapshot => setUserData(snapshot.data()))
+            };
 
-        fetch();
+            fetch();
+        }
     }, [currentUser]);
 
   return (
@@ -58,9 +60,9 @@ function App() {
               <HashRouter>
                   <Routes>
                       <Route path="/*" element={<StartWindow />}/>
-                      <Route  path="/login" element={<Login />} />
-                      <Route  path="/registration" element={<Registration />} />
-                      <Route  path="/app" element={<TableProducts />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/registration" element={<Registration />} />
+                      <Route path="/app" element={<TableProducts />} />
                   </Routes>
               </HashRouter>
           </Box>
