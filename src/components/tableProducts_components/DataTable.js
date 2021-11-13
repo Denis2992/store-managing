@@ -16,8 +16,6 @@ import Paper from '@mui/material/Paper';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { visuallyHidden } from '@mui/utils';
 import {makeStyles} from "@mui/styles";
@@ -28,15 +26,20 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import {dataContext} from "../../App";
 import EditIcon from '@mui/icons-material/Edit';
 import getFirebase from "../../firebase";
+import TableBar from "./TableBar";
 
 
 
 
 function descendingComparator(a, b, orderBy) {
-    if (b[orderBy] < a[orderBy]) {
+    const isNumber = !isNaN(a[orderBy]);
+    let first = isNumber ? +a[orderBy] : a[orderBy];
+    let second = isNumber ? +b[orderBy] : b[orderBy];
+
+    if (second < first) {
         return -1;
     }
-    if (b[orderBy] > a[orderBy]) {
+    if (second > first) {
         return 1;
     }
     return 0;
@@ -48,21 +51,18 @@ function getComparator(order, orderBy) {
         : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-// This method is created for cross-browser compatibility, if you don't
-// need to support IE11, you can use Array.prototype.sort() directly
-function stableSort(array, comparator) {
+
+function stableSort(array = [], comparator) {
     const stabilizedThis = array.map((el, index) => [el, index]);
     stabilizedThis.sort((a, b) => {
         const order = comparator(a[0], b[0]);
-        if (order !== 0) {
-            return order;
-        }
+        if (order !== 0) return order;
         return a[1] - b[1];
     });
     return stabilizedThis.map((el) => el[0]);
 }
 
-const headCells = [
+export const headCells = [
     {id: 'id', label: 'ID', disablePadding: true},
     {id: 'product', label: 'Nazwa produktu', disablePadding: true},
     {id: 'category', label: 'Kategoria', disablePadding: true},
@@ -159,7 +159,7 @@ const EnhancedTableToolbar = (props) => {
                     id="tableTitle"
                     component="div"
                 >
-                    Nutrition
+                    Produkty
                 </Typography>
             )}
 
@@ -230,10 +230,9 @@ export default function DataTable() {
     const classes = useStyles();
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('calories');
-
     const [page, setPage] = useState(0);
     const [dense, setDense] = useState(false);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(50);
     const firebase = getFirebase();
     const navigate = useNavigate();
     const {dataTable, setDataTable, setSingleData, setEditMode, setSelected, selected} = useContext(dataContext);
@@ -337,10 +336,9 @@ export default function DataTable() {
     };
 
     return (
-        <Box sx={{ width: '100%' }} className={classes.mainBox}><FormControlLabel
-            control={<Switch checked={dense} onChange={handleChangeDense} />}
-            label="Małe komórki"
-        /><Paper sx={{ width: '90%', mb: 2 }} className={classes.paper}>
+        <Box sx={{ width: '100%' }} className={classes.mainBox}>
+            <TableBar switchPadding={dense} switchPaddingOnChange={handleChangeDense}/>
+            <Paper sx={{ width: '90%', mb: 2 }} className={classes.paper}>
             <EnhancedTableToolbar
                 numSelected={selected.length}
                 onDeleteItem={handleDeleteItem}
@@ -418,10 +416,11 @@ export default function DataTable() {
                 </Table>
             </TableContainer>
             <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
+                rowsPerPageOptions={[5, 10, 25, 50, 75, 100]}
                 component="div"
                 count={dataTable.length}
                 rowsPerPage={rowsPerPage}
+                labelRowsPerPage="Wierszy na stronie"
                 page={page}
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}

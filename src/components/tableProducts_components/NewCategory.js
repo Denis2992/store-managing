@@ -24,7 +24,7 @@ export const newCategoryStyles = makeStyles((theme) => ({
         top: 0,
         display: "flex",
         justifyContent: "center",
-
+        marginTop: 70
     },
     paper: {
         border: `2px solid ${theme.palette.primary.main}`,

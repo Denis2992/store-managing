@@ -1,5 +1,4 @@
 import React, {useContext, useState} from "react";
-import {EnhancedTableToolbar} from "./CategoriesTable";
 import {EnhancedTableHead} from "./CategoriesTable";
 import {dataContext} from "../../../App";
 import getFirebase from "../../../firebase";
@@ -10,6 +9,68 @@ import TableBody from "@mui/material/TableBody";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
+import {useNavigate} from "react-router-dom";
+import Toolbar from "@mui/material/Toolbar";
+import {alpha} from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+
+
+const EnhancedTableToolbar = (props) => {
+    const { numSelected, onDeleteItem } = props;
+    const navigate = useNavigate();
+
+    return (
+        <Toolbar
+            sx={{
+                pl: { sm: 2 },
+                pr: { xs: 1, sm: 1 },
+                ...(numSelected > 0 && {
+                    bgcolor: (theme) =>
+                        alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
+                }),
+            }}
+            style={{borderTopLeftRadius: 10, borderTopRightRadius: 10,}}
+        >
+            {numSelected > 0 ? (
+                <Typography
+                    sx={{ flex: '1 1 100%' }}
+                    color="inherit"
+                    variant="subtitle1"
+                    component="div"
+                >
+                    {numSelected} wybrano
+                </Typography>
+            ) : (
+                <Typography
+                    sx={{ flex: '1 1 100%' }}
+                    variant="h6"
+                    id="tableTitle"
+                    component="div"
+                >
+                    Dodawaj / Usuwaj kategorię
+                </Typography>
+            )}
+
+            {numSelected > 0 ? (
+                    <Tooltip title="Delete" color="error">
+                        <IconButton onClick={onDeleteItem}>
+                            <DeleteIcon />
+                        </IconButton>
+                    </Tooltip>
+                ) :
+                <Tooltip title="Dadaj kategorie">
+                    <IconButton onClick={() => navigate(`/app/settings/newUnit`)}>
+                        <AddCircleOutlineIcon color="success" />
+                    </IconButton>
+                </Tooltip>
+            }
+        </Toolbar>
+    );
+};
 
 export default function UnitsTable () {
     const [selected, setSelected] = useState([]);
@@ -17,6 +78,8 @@ export default function UnitsTable () {
     const page = 0;
     const rowsPerPage = 100;
     const firebase = getFirebase();
+
+
 
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
@@ -94,6 +157,7 @@ export default function UnitsTable () {
                             numSelected={selected.length}
                             onSelectAllClick={handleSelectAllClick}
                             rowCount={units?.length}
+                            pass={"newUnit"}
                         />
                         <TableBody>
                             {units

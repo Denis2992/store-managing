@@ -1,4 +1,4 @@
-import React, {useContext, useEffect} from "react";
+import React, {useContext} from "react";
 import {
     Box, Button,
     Divider,
@@ -32,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
         top: 0,
         display: "flex",
         justifyContent: "center",
+        marginTop: 70
     },
     paper: {
         border: `2px solid ${theme.palette.secondary.main}`,
@@ -80,12 +81,45 @@ export default function NewEntry () {
         resolver: yupResolver(schema)
     });
     const date = new Date();
-    const fullDate = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const correctDay = () => {
+        if (day > 9) {
+            return day;
+        } else {
+            return `0${day}`
+        }
+    };
+
+    const correctMonth = () => {
+        if (month > 9) {
+            return month;
+        } else {
+            return `0${month}`
+        }
+    };
+
+    const fullDate = `${correctDay()}.${correctMonth()}.${date.getFullYear()}`;
 
     const handleValueChange = (e) => {
         const {name, value} = e.target;
         setSingleData(prevState => ({...prevState, [name]: value}))
     };
+
+    const closeForm = () => {
+        setSingleData({
+            id: "",
+            product: "",
+            category: "",
+            quantity: "",
+            units: "",
+            date: "",
+            employee: ""
+        });
+        setEditMode(false);
+        setSelected([])
+        navigate("/app");
+    }
 
     const handleAddNewData = async () => {
         const ids = dataTable?.map(el => el.id);
@@ -151,15 +185,7 @@ export default function NewEntry () {
                     doc.ref.update(dataToSend).then(() => {
                         console.log("Document successfully edited!");
                         setDataTable([...dataTable?.filter(item => item.id !== dataToSend.id), dataToSend]);
-                        setSingleData({
-                            id: "",
-                            product: "",
-                            category: "",
-                            quantity: "",
-                            units: "",
-                            date: "",
-                            employee: ""
-                        })
+
                         navigate("/app");
                         setSelected([]);
                         setEditMode(false);
@@ -185,7 +211,7 @@ export default function NewEntry () {
     return (
         <Box className={classes.box}>
             <Paper className={classes.paper} elevation={20}>
-                <IconButton onClick={() => navigate("/app")} style={{transform: "translate(270px, -10px)"}}>
+                <IconButton onClick={closeForm} style={{transform: "translate(270px, -10px)"}}>
                     <CloseIcon color="error" />
                 </IconButton>
                 {!editMode ? (

@@ -66,11 +66,12 @@ function App() {
             };
 
             fetch();
+
             fetchData("categories", setCategories);
             fetchData("units", setUnits);
             fetchData("data", setDataTable);
         }
-        }, [currentUser]);
+    }, [firebase, currentUser]);
 
 
 

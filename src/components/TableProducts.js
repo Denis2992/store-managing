@@ -1,16 +1,16 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
+import React, {useContext} from "react";
 import {Box, CircularProgress, Typography} from "@mui/material";
 import {makeStyles} from "@mui/styles";
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import getFirebase from "../firebase";
-import {currentUserContext, dataContext} from "../App";
+import {dataContext} from "../App";
 import {Route, Routes, useNavigate} from "react-router-dom";
 import DataTable from "./tableProducts_components/DataTable";
 import NewEntry from "./tableProducts_components/NewEntry";
 import TableSettings from "./tableProducts_components/TableSettings";
 import NewCategory from "./tableProducts_components/NewCategory";
 import NewUnit from "./tableProducts_components/NewUnit";
-import {fetchData} from "./tableProducts_components/fetchData/fetch";
+
 
 const useStyles = makeStyles((theme) => ({
     mainBox: {
@@ -34,17 +34,17 @@ const useStyles = makeStyles((theme) => ({
 export default function TableProducts () {
     const classes = useStyles();
     const firebase = getFirebase();
-    const {setCurrentUser, userData, setDataTable} = useContext(dataContext);
+    const {setCurrentUser, userData, setDataTable, setUnits, setCategories} = useContext(dataContext);
     const navigate = useNavigate();
-
-
 
     const signOut = async () => {
         try {
             if (firebase) {
                 await firebase.auth().signOut();
                 setCurrentUser(null);
-                setDataTable([])
+                setDataTable([]);
+                setCategories([]);
+                setUnits([]);
                 navigate("/start");
             }
         } catch (error) {
@@ -75,7 +75,10 @@ export default function TableProducts () {
         )
     } else {
         return (
-            <CircularProgress color="secondary"/>
+            <Box style={{display: "flex", alignItems: "center", justifyContent: "center", height: "90%"}}>
+                <CircularProgress color="primary"/>
+            </Box>
+
         );
     }
 }

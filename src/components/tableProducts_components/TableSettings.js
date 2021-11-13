@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
+import React, {useContext} from "react";
 import {makeStyles} from "@mui/styles";
 import SwipeableViews from 'react-swipeable-views';
 import { useTheme } from '@mui/material/styles';
@@ -61,7 +61,7 @@ const useStyles = makeStyles((theme) => ({
         top: 0,
         display: "flex",
         justifyContent: "center",
-
+        marginTop: 70
     },
     paper: {
         border: `2px solid ${theme.palette.primary.main}`,

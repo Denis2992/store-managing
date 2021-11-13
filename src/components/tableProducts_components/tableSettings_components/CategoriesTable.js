@@ -21,6 +21,7 @@ import getFirebase from "../../../firebase";
 
 
 
+
 export function EnhancedTableHead(props) {
     const { onSelectAllClick, numSelected, rowCount} = props;
 
@@ -50,7 +51,7 @@ EnhancedTableHead.propTypes = {
     rowCount: PropTypes.number.isRequired,
 };
 
-export const EnhancedTableToolbar = (props) => {
+const EnhancedTableToolbar = (props) => {
     const { numSelected, onDeleteItem } = props;
     const navigate = useNavigate();
 
@@ -94,7 +95,7 @@ export const EnhancedTableToolbar = (props) => {
                 </Tooltip>
             ) :
                 <Tooltip title="Dadaj kategorie">
-                    <IconButton onClick={() => navigate("/app/settings/newCategory")}>
+                    <IconButton onClick={() => navigate(`/app/settings/newCategory`)}>
                         <AddCircleOutlineIcon color="success" />
                     </IconButton>
                 </Tooltip>
@@ -113,6 +114,7 @@ export default function EnhancedTable() {
     const page = 0;
     const rowsPerPage = 100;
     const firebase = getFirebase();
+
 
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
