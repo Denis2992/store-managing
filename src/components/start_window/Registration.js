@@ -64,16 +64,6 @@ export default function Registration () {
     }
 
     const onSubmit = async () => {
-        // const date = new Date();
-        // const dateToSend = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
-        // const minutes = () => {
-        //     if (date.getMinutes() < 10) {
-        //         return "0" + date.getMinutes();
-        //     } else {
-        //         return date.getMinutes();
-        //     }
-        // };
-        // const timeToSend = `${date.getHours()}:${minutes()}`;
 
         try {
             if (firebase) {

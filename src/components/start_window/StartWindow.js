@@ -6,6 +6,7 @@ import {dataContext} from "../../App";
 import TableProducts from "../TableProducts";
 
 
+
 export default function StartWindow () {
     const classes = useStyles();
     const navigate = useNavigate();
